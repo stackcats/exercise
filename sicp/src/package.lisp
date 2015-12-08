@@ -41,6 +41,14 @@
   (:export :make-center-percent)
   (:export :center)
   (:export :percent)
+  (:export :last-pair)
+  (:export :sicp-reverse)
+  (:export :cc)
+  (:export :same-parity)
+  (:export :square-list)
+  (:export :map-square-list)
+  (:export :square-iter)
+  (:export :for-each)
   )
 
 

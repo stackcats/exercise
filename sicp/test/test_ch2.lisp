@@ -105,3 +105,39 @@
 	  (p 10))
       (assert-equal c (center (make-center-percent c p)))
       (assert-equal p (percent (make-center-percent c p)))))
+
+;;; Ex 2.17
+(define-test last-pair
+    (assert-equal '(34) (last-pair '(23 72 149 34)))
+  (assert-equal nil (last-pair '())))
+
+;;; Ex 2.18
+(define-test reverse
+    (assert-equal '(25 16 9 4 1)
+		  (sicp-reverse '(1 4 9 16 25)))
+  (assert-equal nil (sicp-reverse nil)))
+
+;;; Ex 2.19
+(define-test cc
+    (assert-equal 104561 (cc 100 '(100 50 20 10 5 2 1 0.5)))
+  (assert-equal 292 (cc 100 '(50 25 10 5 1))))
+
+;;; Ex 2.20
+(define-test same-parity
+    (assert-equal '(1 3 5 7) (same-parity 1 2 3 4 5 6 7))
+  (assert-equal '(2 4 6) (same-parity 2 3 4 5 6 7)))
+
+;;; Ex 2.21
+(define-test square-list
+    (assert-equal (map-square-list '(1 2 3 4)) '(1 4 9 16))
+  (assert-equal (square-list '(1 2 3 4)) '(1 4 9 16)))
+
+;;; Ex 2.22
+(define-test square-iter
+    (assert-equal (square-iter '(1 2 3 4)) '(1 4 9 16)))
+
+;;; Ex 2.23
+
+(define-test for-each
+    (assert-prints "5732188" (for-each (lambda (x) (princ x))
+				       '(57 321 88))))

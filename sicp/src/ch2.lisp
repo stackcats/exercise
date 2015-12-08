@@ -253,4 +253,143 @@
 ;; 比如计算过程中使用1/3而不是0.3333333
 ;; 由用户负责将最终结果转换为浮点数, 所有中间过程始终使用有理数计算
 
+;; Ex 2.17
+(defun last-pair (lst)
+  (cond
+    ((null lst) nil)
+    ((null (cdr lst)) lst)
+    (t
+     (last-pair (cdr lst)))))
 
+;;; Ex 2.18
+(defun sicp-reverse (lst)
+  (if (null lst)
+      nil
+      (append (sicp-reverse (cdr lst)) (list (car lst)))))
+
+;;; Ex 2.19
+(defvar us-coins '(50 25 10 5 1))
+(defvar uk-coins '(100 50 20 10 5 2 1 0.5))
+(defvar cc-counts 0)
+
+(defun cc (amount coin-values)
+  ;;(incf cc-counts) ;测试递归次数
+  (cond
+    ((= amount 0) 1)
+    ((or (< amount 0) (no-more? coin-values)) 0)
+    (t
+     (+ (cc amount
+	    (except-first-denomination coin-values))
+	(cc (- amount
+	       (first-denomination coin-values))
+	    coin-values)))))
+
+(defun first-denomination (lst)
+  (car lst))
+
+(defun except-first-denomination (lst)
+  (cdr lst))
+
+(defun no-more? (lst)
+  (null lst))
+
+;;改变链表顺序不会影响程序结果但会影响程序的运行时间
+;;因为降序排列时递归计算的次数要少
+;;下面为本机测试结果,明显uk-coins要比(reverse uk-coins)快很多
+;; (time (cc 100 uk-coins))
+;; (CC 100 UK-COINS)
+;; took 597 milliseconds (0.597 seconds) to run.
+;;        5 milliseconds (0.005 seconds, 0.84%) of which was spent in GC.
+;; During that period, and with 8 available CPU cores,
+;;      576 milliseconds (0.576 seconds) were spent in user mode
+;;       26 milliseconds (0.026 seconds) were spent in system mode
+;;  31,125,744 bytes of memory allocated.
+;;  43 minor page faults, 0 major page faults, 0 swaps.
+;; 104561
+
+;; (time (cc 100 (reverse uk-coins)))
+;; (CC 100 (REVERSE UK-COINS))
+;; took 2,673 milliseconds (2.673 seconds) to run.
+;;         21 milliseconds (0.021 seconds, 0.79%) of which was spent in GC.
+;; During that period, and with 8 available CPU cores,
+;;      2,591 milliseconds (2.591 seconds) were spent in user mode
+;;        106 milliseconds (0.106 seconds) were spent in system mode
+;;  118,946,584 bytes of memory allocated.
+;;  7 minor page faults, 0 major page faults, 0 swaps.
+;; 104561
+
+;; 使用变量cc-counts记录递归次数
+;; (cc 100 uk-coins)
+;; cc-counts -> 7990853
+
+;; (cc 100 (reverse uk-coins))
+;; cc-counts -> 30482293
+
+;;; Ex 2.20
+(defun same-parity (&rest args)
+  (if (null args)
+      nil
+      (let ((m (mod (car args) 2)))
+	(remove-if-not #'(lambda (x) (eql m (mod x 2))) args))))
+
+;;; Ex 2.21
+(declaim (inline sq))
+(defun sq (n)
+  (* n n))
+
+(defun square-list (lst)
+  (if (null lst)
+      nil
+      (cons (sq (car lst))
+	    (square-list (cdr lst)))))
+
+(defun map-square-list (lst)
+  (mapcar #'sq lst))
+
+;;; Ex 2.22
+;;(square-list '(1 2 3 4)
+;;版本1每次迭代都将(car lst)添加到answer之前所以顺序是反的
+;;版本2结果为((((nil . 1) . 2) . 3) . 4),每次迭代都在构造一个cons对
+
+(defun square-iter (lst)
+  (labels ((iter (lst acc)
+	     (if (null lst)
+		 acc
+		 (iter (cdr lst)
+		       (append acc (list (sq (car lst))))))))
+    (iter lst nil)))
+
+;;common lisp常规写法
+;; (defun square-iter-cl (lst)
+;;   (let ((acc nil))
+;;     (dolist (obj lst (nreverse acc))
+;;       (push (sq obj) acc))))
+
+;;; Ex 2.23
+(defun for-each (f lst)
+  (when lst
+    (funcall f (car lst))
+    (for-each f (cdr lst))))
+
+;;; Ex 2.24
+;;'(1 (2 (3 4)))
+
+;;; Ex 2.25
+;;(car '(1 3 (5 7) 9) -> 1
+;;(cdr '(1 3 (5 7) 9) -> '(3 (5 7) 9)
+
+;;(car '((7))) -> '(7)
+;;(cdr '((7))) -> nil
+
+;;(car '(1 (2 (3 (4 (5 (6 7))))))) -> 1
+;;(cdr '(1 (2 (3 (4 (5 (6 7))))))) -> '((2 (3 (4 (5 (6 7))))))
+
+;;; Ex 2.26
+(defparameter x '(1 2 3))
+(defparameter y '(4 5 6))
+;;(append x y) -> '(1 2 3 4 5 6)
+;;(cons x y) -> '((1 2 3) 4 5 6)
+;;(list x y) -> '((1 2 3) (4 5 6))
+
+;;; Ex 2.27
+;;TODO: 
