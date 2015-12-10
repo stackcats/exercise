@@ -392,4 +392,493 @@
 ;;(list x y) -> '((1 2 3) (4 5 6))
 
 ;;; Ex 2.27
-;;TODO: 
+(defun deep-reverse (lst)
+  (let ((acc nil))
+    (dolist (obj lst acc)
+      (if (consp obj)
+	  (push (deep-reverse obj) acc)
+	  (push obj acc)))))
+
+;;; Ex 2.28
+(defun fringe (lst)
+  (cond
+    ((null lst) nil)
+    ((consp (car lst))
+     (append (fringe (car lst)) (fringe (cdr lst))))
+    (t
+     (cons (car lst) (fringe (cdr lst))))))
+
+;;; Ex 2.29
+(defun make-mobile (left right)
+  (list left right))
+
+(defun make-branch (len struct)
+  (list len struct))
+
+(defun left-branch (m)
+  (first m))
+
+(defun right-branch (m)
+  (second m))
+
+(defun branch-length (b)
+  (first b))
+
+(defun branch-structure (b)
+  (second b))
+
+(defun total-weight (m)
+  (let* ((lft (left-branch m))
+	 (rht (right-branch m))
+	 (lfts (branch-structure lft))
+	 (rhts (branch-structure rht)))
+    (cond
+      ((and (atom lfts) (atom rhts))
+       (+ lfts rhts))
+      ((atom lfts)
+       (+ lfts (total-weight rhts)))
+      ((atom rhts)
+       (+ (total-weight lfts) rhts))
+      (t
+       (+ (total-weight lfts) (total-weight rhts))))))
+
+(defun moment (b)
+  (if (atom (branch-structure b))
+      (* (branch-length b) (branch-structure b))
+      (* (branch-length b) (total-weight (branch-structure b)))))
+
+(defun balancep (m)
+  (if (atom m)
+      t
+      (let ((lft (left-branch m))
+	    (rht (right-branch m)))
+	(and (balancep (branch-structure lft))
+	     (balancep (branch-structure rht))
+	     (= (moment lft) (moment rht))))))
+
+;; (defun make-mobile (lft rht)
+;;   (cons lft rht))
+;; (defun make-branch (len struct)
+;;   (cons len struct))
+;; 修改之后只需改下面两个函数
+;; (defun right-branch (m)
+;;   (cdr m))
+;; (defun branch-structure (b)
+;;   (cdr b))
+
+;;; Ex 2.30
+(defun square-tree (lst)
+  (cond
+    ((null lst) nil)
+    ((atom (car lst))
+     (cons (sq (car lst)) (square-tree (cdr lst))))
+    (t
+     (cons (square-tree (car lst))
+	   (square-tree (cdr lst))))))
+
+(defun square-tree-map (lst)
+  (mapcar
+   #'(lambda (x)
+       (if (atom x)
+	   (sq x)
+	   (square-tree-map x)))
+   lst))
+
+;;; Ex 2.31
+(defun tree-map (f tree)
+  (cond
+    ((null tree) nil)
+    ((atom (car tree))
+     (cons (funcall f (car tree)) (tree-map f (cdr tree))))
+    (t
+     (cons (tree-map f (car tree))
+	   (tree-map f (cdr tree))))))
+
+;;; Ex 2.32
+(defun subsets (s)
+  (if (null s)
+      (list nil)
+      (let ((rest (subsets (cdr s))))
+	(append rest (mapcar #'(lambda (x)
+				 (cons (car s) x))
+			     rest)))))
+
+
+;;; Ex 2.33
+(defun accumulate (op init seq)
+  (if (null seq)
+      init
+      (funcall op (car seq)
+	       (accumulate op init (cdr seq)))))
+
+(defun map-acc (p seq)
+  (accumulate #'(lambda (a b) (cons (funcall p a) b))
+	      nil
+	      seq))
+
+(defun append-acc (s1 s2)
+  (accumulate #'cons
+	      s2 s1))
+
+(defun length-acc (seq)
+  (accumulate #'(lambda (a b)
+		  (declare (ignore a))
+		  (+ 1 b))
+	      0
+	      seq))
+
+;;; Ex 2.34
+(defun horner-eval (x coefficient-sequenece)
+  (accumulate #'(lambda (this-coeff higher-terms)
+		  (+ this-coeff (* x higher-terms)))
+	      0
+	      coefficient-sequenece))
+
+;;; Ex 2.35
+(defun enum (tree)
+  (cond
+    ((null tree) nil)
+    ((atom tree) (list tree))
+    (t
+     (append (enum (car tree)) (enum (cdr tree))))))
+(defun count-leaves (tree)
+  (accumulate
+   #'(lambda (a b)
+       (+ (length a) b))
+   0
+   (mapcar #'enum tree)))
+
+;;; Ex 2.36
+(defun accumulate-n (op init seqs)
+  (if (null (car seqs))
+      nil
+      (cons (accumulate op init (mapcar #'car seqs))
+	    (accumulate-n op init (mapcar #'cdr seqs)))))
+
+;;; Ex 2.37
+(defvar mat '((1 2 3 4) (4 5 6 6) (6 7 8 9)))
+(defvar mat2 '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
+(defvar vc '(10 10 10 10))
+
+(defun dot-product (v w)
+  (accumulate #'+ 0 (mapcar #'* v w)))
+
+(defun matrix-*-vector (m v)
+  (mapcar #'(lambda (x) (dot-product x v))
+	  m))
+
+(defun transpose (mat)
+  (accumulate-n
+   #'cons
+   nil
+   mat))
+
+(defun matrix-*-matrix (m n)
+  (let ((cols (transpose n)))
+    (mapcar #'(lambda (x)
+		(mapcar #'(lambda (y) (dot-product x y)) cols))
+	    m)))
+
+;;; Ex 2.38
+(defun fold-left (op initial sequence)
+  (labels ((iter (result rest)
+	     (if (null rest)
+		 result
+		 (iter (funcall op result (car rest))
+		       (cdr rest)))))
+    (iter initial sequence)))
+
+;; (accumulate #'/ 1 (list 1 2 3)) -> 3/2
+;; (fold-left #'/ 1 (list 1 2 3)) -> 1/6
+;; (accumulate #'list nil (list 1 2 3)) -> '(1 (2 (3 nil)))
+;; (fold-left #'list nil (list 1 2 3)) -> '(((nil 1) 2) 3)
+
+;;; Ex 2.39
+(defun reverse-right (sequence)
+  (accumulate #'(lambda (x y) (append y (list x)))
+	      nil
+	      sequence))
+
+(defun reverse-left (sequence)
+  (fold-left #'(lambda (x y) (cons y x))
+	     nil
+	     sequence))
+
+;;; Ex 2.40
+(defun enum-interval (low high)
+  (unless (> low high)
+    (cons low (enum-interval (1+ low) high))))
+
+(defun flatmap (f seq)
+  (accumulate #'append nil (mapcar f seq)))
+
+(defun unique-pairs (n)
+  (flatmap #'(lambda (i)
+	       (mapcar #'(lambda (j) (list j i))
+		       (enum-interval 1 (1- i))))
+	   (enum-interval 1 n)))
+
+(defun prime-p (n)
+  (if (< n 2)
+      nil
+      (dotimes (i (1+ (floor (sqrt n))) t)
+	(when (and (> i 1)
+		   (zerop (mod n i)))
+	  (return nil)))))
+
+(defun prime-sum-pairs (n)
+  (mapcar #'(lambda (x)
+	      (list (car x) (cadr x) (apply #'+ x)))
+	  (remove-if-not #'(lambda (x) (prime-p (apply #'+ x)))
+			 (unique-pairs n))))
+
+;;; 2.41
+(defun triples (n)
+  (remove-if-not
+   #'(lambda (x)
+       (equal (apply #'+ x) n))
+   (flatmap
+    #'(lambda (i)
+	(flatmap
+	 #'(lambda (j)
+	     (mapcar #'(lambda (k) (list k j i))
+		     (enum-interval 1 (1- j))))
+	 (enum-interval 1 (1- i))))
+    (enum-interval 1 n))))
+
+;;; 2.42
+(defparameter empty-board '())
+
+(defun queen (size)
+  (labels ((queen-cols (k)
+	     (if (zerop k)
+		 (list empty-board)
+		 (remove-if-not
+		  #'(lambda (pos) (safep k pos))
+		  (flatmap
+		   #'(lambda (rest-of-queens)
+		       (mapcar #'(lambda (new-row)
+				   (adjion-position new-row
+						    k
+						    rest-of-queens))
+			       (enum-interval 1 size)))
+		   (queen-cols (1- k)))))))
+    (queen-cols size)))
+
+(defun adjion-position (row col positions)
+  (declare (ignore col))
+  (cons row positions))
+
+(defun check (r r+1 r-1 rest)
+  (cond
+    ((null rest) t)
+    ((or (eql r (car rest))
+	 (eql r+1 (car rest))
+	 (eql r-1 (car rest)))
+     nil)
+    (t
+     (check r (1+ r+1) (1- r-1) (cdr rest)))))
+
+(defun safep (k positions)
+  (declare (ignore k))
+  (let ((r (car positions))
+	(rest (cdr positions)))
+    (if (null rest)
+	t
+	(check r (1+ r) (1- r) rest))))
+
+;;; Ex 2.43
+(defun queen-wrong (size)
+  (labels ((queen-cols (k)
+	     (if (zerop k)
+		 (list empty-board)
+		 (remove-if-not
+		  #'(lambda (pos) (safep k pos))
+		  (flatmap
+		   #'(lambda (new-row)
+		       (mapcar #'(lambda (rest-of-queens)
+				   (adjion-position new-row
+						    k
+						    rest-of-queens))
+			       (queen-cols (1- k))))
+		   (enum-interval 1 size))))))
+    (queen-cols size)))
+
+;; 本机测试
+;; (time (queen 8))
+;; (QUEEN 8)
+;; took 4 milliseconds (0.004 seconds) to run.
+;; During that period, and with 8 available CPU cores,
+;;      4 milliseconds (0.004 seconds) were spent in user mode
+;;      1 milliseconds (0.001 seconds) were spent in system mode
+;;  630,240 bytes of memory allocated
+
+;; (time (queen-wrong 8))
+;; (QUEEN-WRONG 8)
+;; took 12,873 milliseconds (12.873 seconds) to run.
+;;       1,498 milliseconds ( 1.498 seconds, 11.64%) of which was spent in GC.
+;; During that period, and with 8 available CPU cores,
+;;      11,332 milliseconds (11.332 seconds) were spent in user mode
+;;       1,925 milliseconds ( 1.925 seconds) were spent in system mode
+;;  3,066,512,887 bytes of memory allocated.
+;;  5,484 minor page faults, 50 major page faults, 0 swaps.
+
+;; 时间T的证明
+;;TODO:
+
+;;; Ex 2.44
+;; (define (up-split painter n)
+;;     (if (= n 0)
+;; 	painter
+;; 	(let ((smaller (up-split (- n 1))))
+;; 	  (below painter (beside smaller smaller)))))
+
+;;; Ex 2.45
+;; (define (split f g)
+;;     (lambda (painter n)
+;;       (if (= n 0)
+;; 	  painter
+;; 	  (let ((smaller ((split f g) painter (- n 1))))
+;; 	    (f painter (g smaller smaller))))))
+
+;;; Ex 2.46
+;; (define (make-vect x y)
+;;     (cons x y))
+
+;; (define xcor-vect car)
+;; (define ycor-vect cdr)
+
+;; (define (add-vect v1 v2)
+;;     (make-vect (+ (xcor-vect v1)
+;; 		  (xcor-vect v2))
+;; 	       (+ (ycor-vect v1)
+;; 		  (ycor-vect v2))))
+
+;; (define (sub-vect v1 v2)
+;;     (make-vect (- (xcor-vect v1)
+;; 		  (xcor-vect v2))
+;; 	       (- (ycor-vect v1)
+;; 		  (ycor-vect v2))))
+
+;; (define (scale-vect s v)
+;;     (make-vect (* s (xcor-vect v))
+;; 	       (* s (ycor-vect v))))
+
+;;; Ex 2.47
+;; (define (make-frame origin edge1 edge2)
+;;     (list origin edge1 edge2))
+
+;; (define (origin-frame frame)
+;;     (car frame))
+;; (define (edge1-frame frame)
+;;     (cadr frame))
+;; (define (edge2-frame frame)
+;;     (caddr frame))
+
+;; (define (make-frame origin edge1 edge2)
+;;     (cons origin (cons edge1 edge2)))
+
+;; (define (origin-frame frame)
+;;     (car frame))
+;; (define (edge1-frame frame)
+;;     (cadr frame))
+;; (define (edge2-frame frame)
+;;     (cddr frame))
+
+;;; Ex 2.48
+;; (define make-segment cons)
+;; (define start-segment car)
+;; (define end-segment cdr)
+
+;;; Ex 2.49
+;; a.
+;; (segments->painter '(((0 . 0) 1 . 0)
+;; 		     ((1 . 0) 1 . 1)
+;; 		     ((1 . 1) 0 . 1)
+;; 		     ((0 . 1) 0 . 0)))
+;; b.
+;; (segments->painter '(((0 . 0) 1 . 1)
+;; 		     ((1 . 0) 0 . 1)))
+;; c.
+;; (segments->painter '(((0.5 . 0) 1 . 0.5)
+;; 		     ((1 . 0.5) 0.5 . 1)
+;; 		     ((0.5 . 1) 0 . 0.5)
+;; 		     ((0 . 0.5) 0.5 . 0)))
+;; d.
+;; fuck my mind
+;; TODO:
+
+;;; Ex 2.50
+;; 原框架
+;;    3 -- 2
+;;     |  |
+;;    0 __ 1
+;; 只需要变换 origin 0 corner1 1 corner2 3 的位置即可
+
+;;    2 -- 3
+;;     |  |
+;;    1 __ 0
+;; (define (flip-horiz painter)
+;;     (transform-painter painter
+;; 		       (make-vect 1 0)
+;; 		       (make-vect 0 0)
+;; 		       (make-vect 1 1)))
+
+;;    1 -- 0
+;;     |  |
+;;    2 __ 3
+;; (define (rotate180 painter)
+;;     (transform-painter painter
+;; 		       (make-vect 1 1)
+;; 		       (make-vect 0 1)
+;; 		       (make-vect 1 0)))
+
+;;    0 -- 3
+;;     |  |
+;;    1 __ 2
+;; (define (rotate270 painter)
+;;     (transform-painter painter
+;; 		       (make-vect 0 1)
+;; 		       (make-vect 0 0)
+;; 		       (make-vect 1 1)))
+
+;;; Ex 2.51
+;; (define (below painter1 painter2)
+;;     (let ((split-point (make-vect 0.0 0.5)))
+;;       (let ((paint-bottom
+;; 	     (transform-painter
+;; 	      painter1
+;; 	      (make-vect 0.0 0.0)
+;; 	      (make-vect 1.0 0.0)
+;; 	      split-point))
+;; 	    (paint-top
+;; 	     (transform-painter
+;; 	      painter2
+;; 	      split-point
+;; 	      (make-vect 1.0 0.5)
+;; 	      (make-vect 0.0 1.0))))
+;; 	(lambda (frame)
+;; 	  (paint-top frame)
+;; 	  (paint-bottom frame)))))
+
+;; (define (below painter1 painter2)
+;;     (rotate90 (beside (rotate270 painter1)
+;;                       (rotate270 painter2))))
+
+;;; Ex 2.52
+;; a.
+;;TODO:
+
+;; b.
+;; (define (corner-split painter n) 
+;;     (if (= n 0) 
+;; 	painter 
+;; 	(beside (below painter (up-split painter (- n 1))) 
+;; 		(below (right-split painter (- n 1))
+;; 		       (corner-split painter (- n 1))))))
+
+;; c.
+;; (define (square-limit painter n) 
+;;     (let ((combine4 (square-of-four flip-vert rotate180 
+;; 				    identity flip-horiz))) 
+;;       (combine4 (corner-split painter n)))) 

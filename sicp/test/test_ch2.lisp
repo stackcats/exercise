@@ -137,7 +137,130 @@
     (assert-equal (square-iter '(1 2 3 4)) '(1 4 9 16)))
 
 ;;; Ex 2.23
-
 (define-test for-each
     (assert-prints "5732188" (for-each (lambda (x) (princ x))
 				       '(57 321 88))))
+
+;;; Ex 2.27
+(define-test deep-reverse
+    (assert-equal (deep-reverse '((1 (5 6 7) 2) (3 4)))
+		  '((4 3) (2 (7 6 5) 1))))
+
+;;; Ex 2.28
+(define-test fringe
+    (let ((x '((1 2) (3 4))))
+      (assert-equal '(1 2 3 4) (fringe x))
+      (assert-equal '(1 2 3 4 1 2 3 4) (fringe (list x x)))
+      (assert-equal nil (fringe nil))))
+
+;;; Ex 2.29
+(define-test mobile
+    (let* ((m1 (make-mobile (make-branch 10 15)
+			    (make-branch 5 10)))
+	   (m2 (make-mobile (make-branch 5 5)
+			    (make-branch 9 6)))
+	   (m3 (make-mobile (make-branch 20 m1)
+			    (make-branch 5 m2)))
+	   (m4 (make-mobile (make-branch 50 50)
+			    (make-branch 8 m3)))
+	   (m5 (make-mobile (make-branch 10 5)
+			    (make-branch 5 10)))
+	   (m6 (make-mobile (make-branch 3 18)
+			    (make-branch 9 6)))
+	   (m7 (make-mobile (make-branch 80 m5)
+			    (make-branch 50 m6))))
+      (assert-equal (total-weight m3) 36)
+      (assert-equal (total-weight m4) 86)
+      (assert-false (balancep m4))
+      (assert-true (balancep m7))))
+
+;;; Ex 2.30
+(define-test square-tree
+    (let ((lst '(1 (2 (3 4) 5) (6 7))))
+      (assert-equal '(1 (4 (9 16) 25) (36 49))
+		    (square-tree lst))
+      (assert-equal '(1 (4 (9 16) 25) (36 49))
+		    (square-tree-map lst))))
+
+;;; Ex 2.31
+(define-test tree-map
+    (let ((lst '(1 (2 (3 4) 5) (6 7))))
+      (assert-equal '(1 (4 (9 16) 25) (36 49))
+		    (tree-map #'(lambda (x) (* x x)) lst))))
+
+;;; Ex 2.32
+(define-test subsets
+    (let ((s (subsets '(1 2 3))))
+      (assert-equal '(NIL (1) (2) (3) (1 2) (1 3) (2 3) (1 2 3))
+		    (sort s #'(lambda (a b)
+				(<= (length a) (length b)))))))
+
+;;; Ex 2.33
+(define-test accumulate
+    (assert-equal '(1 4 9 16 25)
+		  (map-acc #'(lambda (x) (* x x))
+			   '(1 2 3 4 5)))
+  (assert-equal (append '(1 2 3) '(4 5 6))
+		(append-acc '(1 2 3) '(4 5 6)))
+  (assert-equal 4 (length-acc '(1 2 3 4))))
+
+;;; Ex 2.34
+(define-test horner-eval
+    (assert-equal (horner-eval 2 '(1 3 0 5 0 1))
+		  (+ 1 (* 3 2) (* 5 2 2 2) (* 2 2 2 2 2))))
+
+;;; Ex 2.35
+(define-test count-leaves
+    (assert-equal 11
+		  (count-leaves '(1 (2 (3 4) 6) 7 8 9 (((((1 (2 3))))))))))
+
+;;; Ex 2.36
+(define-test accumulate-n
+    (assert-equal (accumulate-n #'+
+				0
+				'((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
+		  '(22 26 30)))
+
+;;; Ex 2.37
+(define-test matrix
+    (let ((m '((1 2 3 4) (4 5 6 6) (6 7 8 9)))
+	  (n '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
+	  (v '(10 10 10 10)))
+      (assert-equal '((70 80 90) (126 147 168) (180 210 240))
+		    (matrix-*-matrix m n))
+      (assert-equal '((1 4 6) (2 5 7) (3 6 8) (4 6 9))
+		    (transpose m))
+      (assert-equal '(100 210 300)
+		    (matrix-*-vector m v))))
+
+;;; Ex 2.39
+(define-test reverse-acc
+    (let ((lst '(1 2 3 4 5)))
+      (assert-equal (reverse lst)
+		    (reverse-left lst))
+      (assert-equal (reverse-left lst)
+		    (reverse-right lst))))
+
+;;; Ex 2.40
+(define-test unique-pairs
+    (let ((x '((1 2 3) (2 3 5) (1 4 5) (3 4 7) (2 5 7) (1 6 7) (5 6 11))))
+      (assert-equal x (prime-sum-pairs 6))))
+
+(defun sort-helper (a b)
+  "Sort a list of list with same length by number."
+  (cond
+    ((null a) 1)
+    ((= (car a) (car b))
+     (sort-helper (cdr a) (cdr b)))
+    (t
+     (< (car a) (car b)))))
+
+;;; Ex 2.41
+(define-test triples
+    (assert-equal '((1 2 7) (1 3 6) (1 4 5) (2 3 5))
+		  (sort (triples 10) #'sort-helper)))
+
+
+;;; Ex 2.42
+(define-test queen
+    (assert-equal 92 (length (queen 8))))
