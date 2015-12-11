@@ -882,3 +882,185 @@
 ;;     (let ((combine4 (square-of-four flip-vert rotate180 
 ;; 				    identity flip-horiz))) 
 ;;       (combine4 (corner-split painter n)))) 
+
+;;; Ex 2.53
+;; (list 'a 'b 'c) -> '(a b c)
+;; (list (list 'george)) -> '((george))
+;; (cdr '((x1 x2) (y1 y2))) -> '((y1 y2))
+;; (cadr '((x1 x2) (y1 y2))) -> '(y1 y2)
+;; (consp (car '(a short list))) -> nil
+;; (member 'red '((red shoes) (blue socks))) -> nil
+;; (member 'red '(red shoes blue socks)) -> '(red shoes blue socks)
+
+;;; Ex 2.54
+(defun equal? (lst1 lst2)
+  (cond
+    ((and (null lst1) (null lst2)) t)
+    ((and (consp (car lst1)) (consp (car lst2)))
+     (and (equal? (car lst1) (car lst2))
+	  (equal? (cdr lst1) (cdr lst2))))
+    ((and (atom (car lst1)) (atom (car lst2)))
+     (and (eq (car lst1) (car lst2))
+	  (equal? (cdr lst1) (cdr lst2))))
+    (t nil)))
+
+
+;;; Ex 2.55
+;; (car ''abracadabra) = (car '(quote abracadabra))
+
+;;; Ex 2.56
+(defun deriv (expr var)
+  (cond
+    ((numberp expr) 0)
+    ((symbolp expr) (if (eql expr var) 1 0))
+    ((sum-p expr) (make-sum (deriv (a1 expr) var)
+			    (deriv (a2 expr) var)))
+    ((product-p expr)
+     (make-sum (make-product (deriv (m1 expr) var)
+			     (m2 expr))
+	       (make-product (m1 expr)
+			     (deriv (m2 expr) var))))
+    ((exponentiation-p expr)
+     (make-product (power expr)
+		   (make-exponentiation (base expr)
+					(1- (power expr)))))
+    (t
+     (error "Unknown Type."))))
+
+(defun exponentiation-p (expr)
+  (and (consp expr) (eql '** (car expr))))
+
+(defun make-exponentiation (a b)
+  (cond
+    ((number= a 0) 0)
+    ((number= b 0) 1)
+    ((number= b 1) a)
+    ((and (numberp a) (numberp b)) (expt a b))
+    (t
+     (list '** a b))))
+
+(defun base (expr)
+  (second expr))
+
+(defun power (expr)
+  (third expr))
+
+(defun sum-p (expr)
+  (and (consp expr) (eql '+ (car expr))))
+
+(defun number= (a b)
+  (and (numberp a) (= a b)))
+
+(defun product-p (expr)
+  (and (consp expr) (eql '* (car expr))))
+
+(defun make-product (a b)
+  (cond
+    ((or (number= a 0) (number= b 0)) 0)
+    ((number= a 1) b)
+    ((number= b 1) a)
+    ((and (numberp a) (numberp b)) (* a b))
+    (t
+     (list '* a b))))
+
+(defun make-sum (a b)
+  (cond
+    ((number= a 0) b)
+    ((number= b 0) a)
+    ((and (numberp a) (numberp b)) (+ a b))
+    (t
+     (list '+ a b))))
+
+;;; Ex 2.57
+(defun a1 (expr)
+  (second expr))
+
+(defun a2 (expr)
+  (let ((rest (cddr expr)))
+    (if (> (length rest) 1)
+	(cons '+ rest)
+	(car rest))))
+
+(defun m1 (expr)
+  (second expr))
+
+(defun m2 (expr)
+  (let ((rest (cddr expr)))
+    (if (> (length rest) 1)
+	(cons '* rest)
+	(car rest))))
+
+;;; Ex 2.58
+;; 问题b需要+特殊处理, 如果表达式存在+,通过+分解表达式
+;; *不做特殊处理
+;; 如果还有**,则需要再通过*分解表达式
+;; 总结, 按优先级顺序,从低到高不断的分解表达式
+(defun infix-make-sum (a b)
+  (cond
+    ((number= a 0) b)
+    ((number= b 0) a)
+    ((and (numberp a) (numberp b)) (+ a b))
+    (t
+     (list a '+ b))))
+
+(defun infix-make-product (a b)
+  (cond
+    ((or (number= a 0) (number= b 0)) 0)
+    ((number= a 1) b)
+    ((number= b 1) a)
+    ((and (numberp a) (numberp b)) (* a b))
+    (t
+     (list a '* b))))
+
+(defun infix-deriv (expr var)
+  (cond
+    ((numberp expr) 0)
+    ((symbolp expr) (if (eql expr var) 1 0))
+    ((infix-sum-p expr) (infix-make-sum (infix-deriv (infix-a1 expr) var)
+					(infix-deriv (infix-a2 expr) var)))
+    ((infix-product-p expr)
+     (infix-make-sum (infix-make-product (infix-deriv (infix-m1 expr) var)
+					 (infix-m2 expr))
+		     (infix-make-product (infix-m1 expr)
+					 (infix-deriv (infix-m2 expr) var))))
+    (t
+     (error "Unknown Type."))))
+
+(defun infix-m1 (expr)
+  (first expr))
+
+(defun infix-m2 (expr)
+  (let ((rest (cddr expr)))
+    (if (> (length rest) 1)
+	rest
+	(car rest))))
+
+(defun find-until-symbol (expr sym)
+  (if (or (null expr) (eql sym (car expr)))
+      nil
+      (cons (car expr) (find-until-symbol (cdr expr) sym))))
+
+(defun infix-a1 (expr)
+  (let ((a1 (find-until-symbol expr '+)))
+    (if (> (length a1) 1)
+	a1
+	(car a1))))
+
+(defun infix-a2 (expr)
+  (let ((rest (cdr (member '+ expr))))
+    (if (> (length rest) 1)
+	rest
+	(car rest))))
+
+(defun prior (expr)
+  (if (member '+ expr)
+      '+
+      '*))
+
+(defun infix-sum-p (expr)
+  (eql '+ (prior expr)))
+
+
+(defun infix-product-p (expr)
+  (eql '* (prior expr)))
+

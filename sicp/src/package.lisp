@@ -73,6 +73,11 @@
   (:export :prime-sum-pairs)
   (:export :triples)
   (:export :queen)
+  (:export :equal?)
+  (:export :deriv)
+  (:export :infix-deriv)
+
+  
   )
 
 

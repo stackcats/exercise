@@ -264,3 +264,30 @@
 ;;; Ex 2.42
 (define-test queen
     (assert-equal 92 (length (queen 8))))
+
+;;; Ex 2.54
+(define-test equal?
+    (assert-true (equal? '(a b (d e (f g)) c)
+			 '(a b (d e (f g)) c)))
+  (assert-false (equal? '(a b g) '(a b h))))
+
+;;; Ex 2.56
+(define-test exponentiation
+    (assert-equal '(* 2 x) (deriv '(** x 2) 'x))
+  (assert-equal 1 (deriv '(** x 1) 'x))
+  (assert-equal '(* 2 x) (deriv '(** x 2) 'x)))
+
+;;; Ex 2.57
+(define-test arbitrary-mul-add
+    (assert-equal (deriv '(* x y (+ x 3)) 'x)
+		  '(+ (* Y (+ X 3)) (* X Y))))
+
+;;; Ex 2.58
+(define-test infix-deriv
+    (assert-equal 4
+		  (infix-deriv '(x + (3 * (x + (y + 2)))) 'x))
+  (assert-equal '((y * (x + 3)) + (x * y))
+		(infix-deriv '((x * y) * (x + 3)) 'x))
+  (assert-equal '((y * (x + 3)) + (x * y))
+		(infix-deriv '(x * y * (x + 3)) 'x)))
+
