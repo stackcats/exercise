@@ -1,8 +1,5 @@
 (in-package :sicp-test)
 
-(defun run-test-ch2 ()
-  (run-tests))
-
 ;;; Ex 2.1
 (define-test make-rat
     (assert-equal '(1 . 2) (make-rat 3 6))
@@ -291,3 +288,39 @@
   (assert-equal '((y * (x + 3)) + (x * y))
 		(infix-deriv '(x * y * (x + 3)) 'x)))
 
+;;; Ex 2.59
+(define-test union-set
+    (assert-equal '(1 2 3 4 5 6)
+		  (union-set '(1 2 3) '(4 5 6)))
+  (assert-equal '(1 2 3)
+		(union-set '(1 2 3) '()))
+  (assert-equal '(4 5 6)
+		(union-set '() '(4 5 6)))
+  (assert-equal '(1 2 3 4 5)
+		(union-set '(1 2 3) '(3 4 5))))
+
+;;; Ex 2.61
+(define-test adjoin-order-set
+    (assert-equal '(2 4 6) (adjoin-order-set 2 '(2 4 6)))
+  (assert-equal '(1 2 4 6) (adjoin-order-set 1 '(2 4 6)))
+  (assert-equal '(2 3 4 6) (adjoin-order-set 3 '(2 4 6)))
+  (assert-equal '(2 4 5 6) (adjoin-order-set 5 '(2 4 6)))
+  (assert-equal '(2 4 6 7) (adjoin-order-set 7 '(2 4 6))))
+
+;;; Ex 2.62
+(define-test union-order-set
+    (assert-equal '(1 2 3 4 5 6)
+		  (union-order-set '(1 3 5) '(2 4 6)))
+  (assert-equal '(1 2 3 4 5)
+		(union-order-set '(1 2 3 4) '(2 3 4 5))))
+
+;;; Ex 2.68
+(define-test encode
+    (assert-equal sample-message
+		  (encode (decode sample-message sample-tree)
+			  sample-tree)))
+
+;;; Ex 2.69
+(define-test generate-huffman-tree
+    (assert-equal sample-tree
+		  (generate-huffman-tree pairs)))

@@ -1,7 +1,10 @@
 (defpackage :sicp
   (:use :common-lisp)
   ;; ch1
-  (:export :square)
+  (:export :square-of-larger)
+  (:export :cube-root)
+  (:export :f-iter)
+  (:export :f-recur)
   ;; ch2
   (:export :make-rat)
   (:export :numer)
@@ -76,8 +79,13 @@
   (:export :equal?)
   (:export :deriv)
   (:export :infix-deriv)
+  (:export :union-set)
+  (:export :adjoin-order-set)
+  (:export :union-order-set)
+  (:export :decode)
+  (:export :encode)
+  (:export :generate-huffman-tree)
 
-  
   )
 
 

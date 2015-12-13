@@ -16,7 +16,6 @@
 (defun denom (x)
   (cdr x))
 
-
 ;;; Ex 2.2
 (defun make-point (x y)
   (cons x y))
@@ -991,7 +990,7 @@
 	(car rest))))
 
 ;;; Ex 2.58
-;; 问题b需要+特殊处理, 如果表达式存在+,通过+分解表达式
+;; 问题b需要对+特殊处理, 如果表达式存在+,通过+分解表达式
 ;; *不做特殊处理
 ;; 如果还有**,则需要再通过*分解表达式
 ;; 总结, 按优先级顺序,从低到高不断的分解表达式
@@ -1064,3 +1063,304 @@
 (defun infix-product-p (expr)
   (eql '* (prior expr)))
 
+
+;;; Ex 2.59
+(defun element-of-set-p (e s)
+  (cond
+    ((null s) nil)
+    ((eql e (car s)) t)
+    (t
+     (element-of-set-p e (cdr s)))))
+
+(defun union-set (s1 s2)
+  (cond
+    ((null s1) s2)
+    ((null s2) s1)
+    ((element-of-set-p (car s1) s2)
+     (union-set (cdr s1) s2))
+    (t
+     (cons (car s1) (union-set (cdr s1) s2)))))
+
+;;; Ex 2.60
+;; adjoin-set 不需要判断是否存在 时间复杂度O(1)
+(defun adjoin-set (e s)
+  (cons e s))
+
+;; union-set 同adjoin-set 允许重复 不需要判断是否存在
+;; 时间复杂度O(length(s1))
+;; (defun union-set (s1 s2)
+;;   (append s1 s2))
+
+;; element-of-set? 时间复杂度不变
+
+;; intersection-set 时间复杂度不变
+
+;;; Ex 2.61
+(defun adjoin-order-set (e s)
+  (cond
+    ((null s) (list e))
+    ((eql e (car s)) s)
+    ((< e (car s))
+     (cons e s))
+    (t
+     (cons (car s) (adjoin-order-set e (cdr s))))))
+
+;;; Ex 2.62
+(defun union-order-set (s1 s2)
+  (cond
+    ((null s1) s2)
+    ((null s2) s1)
+    ((eql (car s1) (car s2))
+     (cons (car s1) (union-order-set (cdr s1) (cdr s2))))
+    ((< (car s1) (car s2))
+     (cons (car s1) (union-order-set (cdr s1) s2)))
+    (t
+     (cons (car s2) (union-order-set s1 (cdr s2))))))
+
+;;; Ex 2.63
+;; 结果一样 都是中序遍历
+;; 对于n个结点的平衡二叉树
+;; tree->list-2
+;; 使用cons求得最后结果 时间复杂度为O(n) (cons操作时间复杂为O(1))
+;; tree->list-1 则使用append求得最后结果
+;; 设T(n)为tree->list-1的时间复杂度
+;; 则 T(n) = O(n/2) + T(n/2)
+;; O(n/2) 表示append的复杂度，每次处理当前结点的左子树,所以为n/2
+;; T(n/2) 表示tree->list-1处理当前结点的右子树的时间复杂度
+;; 最后可以求出时间复杂度为O(n*logn) (计算方法参考《算法导论》第2章)
+
+;;; Ex 2.64
+;;    5
+;;  /   \
+;; 1     9
+;;  \   / \
+;;   3 7   11
+;;
+;; 流程大概为:
+;; 取list长度的一半位置的元素为当前值
+;; 左半为左子树, 右半为右子树
+;; 递归处理左子树, 递归处理右子树
+;; 时间复杂度为O(n)
+;; 每次递归只是通过当前剩余元素的长度获取位置
+;; 长度只有list->tree中初始化, partial-tree中只通过四则运算计算
+;; 所以这部分时间复杂度为n(1)
+;; 递归也只是遍历剩余元素的list 时间复杂度为O(n)
+
+;;; Ex 2.65
+;; 时间复杂度
+;; tree->list n
+;; union-order-set n+n
+;; list->tree n
+;; 所以整体为O(n)
+
+;; (defun union-set (s1 s2)
+;;   (list->tree (union-order-set (tree->list s1)
+;; 			       (tree->list s2))))
+
+;; 同理intersection-set也为O(n)
+;; (defun intersection-set (s1 s2)
+;;   (list->tree (intersection-set (tree->list s1)
+;; 			       (tree->list s2))))
+
+;; 这种处理还有一个好处就是union和intersection之后让仍然是平衡的
+
+;;; Ex 2.66
+;; (defun lookup (given-key set-of-records)
+;;   (if (null set-of-records)
+;;       nil
+;;       (let ((current-key (key (entry set-of-records))))
+;; 	(cond
+;; 	  ((= given-key current-key)
+;; 	   (entry set-of-records))
+;; 	  ((< given-key current-key)
+;; 	   (lookup given-key (left set-of-records)))
+;; 	  (t
+;; 	   (lookup given-key (right set-of-records)))))))
+
+;;; Ex 2.67
+(defun make-leaf (symbol weight)
+  (list 'leaf symbol weight))
+
+(defun leaf-p (object)
+  (eql (car object) 'leaf))
+
+(defun symbol-leaf (x)
+  (second x))
+
+(defun weight-leaf (x)
+  (third x))
+
+(defun make-code-tree (left right)
+  (list left
+	right
+	(append (symbols left)
+		(symbols right))
+	(+ (weight left)
+	   (weight right))))
+
+(defun symbols (tree)
+  (if (leaf-p tree)
+      (list (symbol-leaf tree))
+      (third tree)))
+
+(defun weight (tree)
+  (if (leaf-p tree)
+      (weight-leaf tree)
+      (fourth tree)))
+
+(defun left-branch-huffman (tree)
+  (first tree))
+
+(defun right-branch-huffman (tree)
+  (second tree))
+
+(defun decode (bits tree)
+  (labels ((helper (bits current-branch)
+	     (if (null bits)
+		 nil
+		 (let ((next-branch
+			(choose-branch (car bits)
+				       current-branch)))
+		   (if (leaf-p next-branch)
+		       (cons (symbol-leaf next-branch)
+			     (helper (cdr bits) tree))
+		       (helper (cdr bits) next-branch))))))
+    (helper bits tree)))
+
+(defun choose-branch (bit branch)
+  (cond
+    ((eq bit 0) (left-branch-huffman branch))
+    ((eq bit 1) (right-branch-huffman branch))
+    (t (error "bad bit ~S : CHOOSE-BRANCH" bit))))
+
+(defun adjoin-weight (x set)
+  (cond
+    ((null set) (list x))
+    ((< (weight x) (weight (car set)))
+     (cons x set))
+    (t
+     (cons (car set)
+	   (adjoin-weight x (cdr set))))))
+
+(defun make-leaf-set (pairs)
+  (if (null pairs)
+      nil
+      (adjoin-weight (make-leaf (car (car pairs))
+				(cadr (car pairs)))
+		     (make-leaf-set (cdr pairs)))))
+
+(defparameter sample-tree
+  (make-code-tree (make-leaf 'A 4)
+		  (make-code-tree
+		   (make-leaf 'B 2)
+		   (make-code-tree (make-leaf 'D 1)
+				   (make-leaf 'C 1)))))
+(export 'sample-tree)
+
+(defparameter sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+(export 'sample-message)
+;; (decode sample-message sample-tree)
+;; ->
+;; '(A D A B B C A)
+
+;;; Ex 2.68
+(defun encode (message tree)
+  (if (null message)
+      nil
+      (append (encode-symbol (car message) tree)
+	      (encode (cdr message) tree))))
+
+(defun encode-symbol (m tree)
+  ;; (if (leaf-p tree)
+  ;;     (if (eql (symbols tree) m)
+  ;; 	  nil
+  ;; 	  (error "Unknown Symbol:~S" m))
+  ;;     (if (member m (symbols tree))
+  ;; 	  (
+  (if (member m (symbols tree))
+      (cond
+	((leaf-p tree) nil)
+	((member m (symbols (left-branch-huffman tree)))
+	 (cons 0 (encode-symbol m (left-branch-huffman tree))))
+	(t
+	 (cons 1 (encode-symbol m (right-branch-huffman tree)))))
+      (error "Unknown Symbol:~S" m)))
+
+;;; Ex 2.69
+(defparameter pairs '((A 4) (B 2) (C 1) (D 1)))
+(export 'pairs)
+
+(defun generate-huffman-tree (pairs)
+  (successive-merge (make-leaf-set pairs)))
+
+(defun successive-merge (leafs)
+  (cond
+    ((null leafs) nil)
+    ((null (cdr leafs)) (car leafs))
+    (t
+     (successive-merge
+      (adjoin-weight (make-code-tree (car leafs)
+				     (cadr leafs))
+		     (cddr leafs))))))
+
+;;; Ex 2.70
+(defparameter eight-symbol
+  '((A 2) (GET 2) (SHA 3) (WAH 1)
+    (BOOM 1) (JOB 2) (NA 16) (YIP 9)))
+
+(defparameter get-a-job
+  '(Get a job
+    Sha na na na na na na na na
+    Get a job
+    Sha na na na na na na na na
+    Wah yip yip yip yip yip yip yip yip yip
+    Sha boom))
+;; (length (encode get-a-job eight-symbol)) -> 84
+;; 8个符号为2^3种情况,可以用3位bit表示定长编码
+;; 总长度为(* 3 (length get-a-job)) -> 108
+
+;;; Ex 2.71
+;; 简化问题直接用频度数字代表符号
+;; n = 5 时
+;;              (1 2 4 8 16)
+;;                  /  \
+;;                16    (1 2 4 8)
+;;                        / \
+;;                      8   (1 2 4)
+;;                           / \
+;;                          4  (1 2)
+;;                              / \
+;;                             2   1
+;; 最频繁的16编码为0 1位
+;; 最不频繁的1为1111 4位
+
+;; n = 10 时
+;;        (1 2 4 8 16 32 64 128 256 512)
+;;         /    \
+;;      512    (1 2 4 8 16 32 64 128 256)
+;;             /   \
+;;           256  (1 2 4 8 16 32 64 128)
+;;                 /  \
+;;               128  (1 2 4 8 16 32 64)
+;;                     /  \
+;;                   64  (1 2 4 8 16 32)
+;;                        /  \
+;;                      32   (1 2 4 8 16)
+;;                            /  \
+;;                         16    (1 2 4 8)
+;;                                / \
+;;                               8   (1 2 4)
+;;                                    / \
+;;                                   4  (1 2)
+;;                                       / \
+;;                                      2   1
+;; 最频繁的512编码为0 长度1
+;; 最不频繁的1为111111111 长度为9
+;; 2个例子可以看出来最频繁的编码长度为0,最不频繁的编码长度为n-1
+;; 编码的一个优点 2^n = 2^0+2^1+...+2^(n-1) + 1
+
+;;; Ex 2.72
+;; 根据2.71的结论
+;; 假设一个符号的搜索次数为m
+;; 则搜索最频繁的n时间复杂度为O(m)
+;; 则搜做最不频繁的1时间复杂度为O(m*n) (树的深度*搜索次数)
