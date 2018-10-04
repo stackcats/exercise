@@ -1,7 +1,10 @@
-# 课后练习题
+# Exercise
 
-## JavaScript (node v4.0.0)
-* Eloquent JavaScript
+* JavaScript
+  * Eloquent JavaScript
 
-## Lisp (ccl v1.10)
-* Structure and Interpretation of Computer Programs
+* Lisp
+  * Structure and Interpretation of Computer Programs
+  
+* C
+  * Foundations of GTK+ Development
